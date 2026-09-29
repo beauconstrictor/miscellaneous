@@ -5,11 +5,12 @@ out     vec4  fragColor;
 uniform vec2  centre;
 uniform float viewport;
 uniform vec2  parameter;
+uniform float parameter2;
 uniform vec2  resolution;
 
 const   int   MAX_I     = 300;
 const   float THRESHOLD = 100.0;
-const   vec3  TINT = vec3(4, 2, 6);
+const   vec3  TINT = vec3(7, 1, 1);
 
 void main() {
   vec2 p = gl_FragCoord.xy;
@@ -20,7 +21,10 @@ void main() {
   vec2 c = parameter;
 
   while (i < MAX_I && dot(z, z) <= THRESHOLD) {
-    z = vec2(z.x*z.x - z.y*z.y, 2.0 * z.x * z.y) + c;
+    float r = length(z);
+    float theta = atan(z.y, z.x);
+    z = pow(r, parameter2) * vec2(cos(parameter2 * theta), sin(parameter2  * theta)) + c;
+
     i++;
   }
 

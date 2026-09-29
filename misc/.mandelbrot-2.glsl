@@ -1,20 +1,23 @@
 #version 330 core
 
-out vec4 fragColor;
+out     vec4  fragColor;
 
-uniform vec2 centre;
+uniform vec2  centre;
 uniform float viewport;
-uniform vec2 resolution;
+uniform vec2  parameter;
+uniform vec2  resolution;
 
-const int   MAX_I     = 300;
-const float THRESHOLD = 4.0;
+const   int   MAX_I     = 300;
+const   float THRESHOLD = 100.0;
+const   vec3  TINT = vec3(4, 2, 6);
 
 void main() {
   vec2 p = gl_FragCoord.xy;
-  vec2 c = centre + (p - 0.5 * resolution) / resolution.y * viewport;
+  vec2 coord = centre + (p - 0.5 * resolution) / resolution.y * viewport;
 
   int  i = 0;
-  vec2 z = vec2(0.0);
+  vec2 z = coord;
+  vec2 c = parameter;
 
   while (i < MAX_I && dot(z, z) <= THRESHOLD) {
     z = vec2(z.x*z.x - z.y*z.y, 2.0 * z.x * z.y) + c;
@@ -27,5 +30,5 @@ void main() {
 
   float col = smooth_i / float(MAX_I);
 
-  fragColor = vec4(col, col, col, 1.0);
+  fragColor = vec4(col*TINT.r, col*TINT.g, col*TINT.b, 1.0);
 }

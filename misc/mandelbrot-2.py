@@ -2,14 +2,15 @@ from pathlib import Path
 import moderngl
 import pygame
 
-VIEWPORT   = 3
-ZOOM_RATE  = 0.01
-RESOLUTION = 800, 600
+VIEWPORT      = 3
+ZOOM_RATE     = 0.01
+RESOLUTION    = 1920, 1080
 
 class MandelbrotExplorer:
     def __init__(self) -> None:
-        self.centre = [-0.45, 0.0]
-        self.viewport = VIEWPORT
+        self.viewport  = VIEWPORT
+        self.centre    = [0, 0]
+        self.parameter = [0, 0]
 
         self.set_up_pygame()
         self.set_up_gpu()
@@ -52,23 +53,47 @@ class MandelbrotExplorer:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
+
                 elif event.type == pygame.MOUSEWHEEL:
-                    if event.y > 0:   self.viewport /= 1 + ZOOM_RATE
-                    elif event.y < 0: self.viewport *= 1 + ZOOM_RATE
+                    mouse_x, mouse_y = pygame.mouse.get_pos()
+                    mouse_x -= RESOLUTION[0] / 2
+                    mouse_y -= RESOLUTION[1] / 2
+                    dist_per_pixel = self.viewport / RESOLUTION[1]
+
+                    mouse_world_x = self.centre[0] + mouse_x * dist_per_pixel
+                    mouse_world_y = self.centre[1] - mouse_y * dist_per_pixel
+
+                    if event.y > 0:
+                        self.viewport /= 1 + ZOOM_RATE
+                    elif event.y < 0:
+                        self.viewport *= 1 + ZOOM_RATE
+
+                    dist_per_pixel = self.viewport / RESOLUTION[1]
+                    new_mouse_world_x = self.centre[0] + mouse_x * dist_per_pixel
+                    new_mouse_world_y = self.centre[1] - mouse_y * dist_per_pixel
+
+                    self.centre[0] += mouse_world_x - new_mouse_world_x
+                    self.centre[1] += mouse_world_y - new_mouse_world_y
+
+
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     dragging = True
                 elif event.type == pygame.MOUSEBUTTONUP:
                     dragging = False
                 elif event.type == pygame.MOUSEMOTION and dragging:
                     dx, dy = event.rel
-    
                     dist_per_pixel = self.viewport / RESOLUTION[1]
 
-                    self.centre[0] -= dx * dist_per_pixel
-                    self.centre[1] += dy * dist_per_pixel
+                    if pygame.key.get_mods() & pygame.KMOD_SHIFT:
+                        self.parameter[0] -= dx * dist_per_pixel
+                        self.parameter[1] += dy * dist_per_pixel
+                    else:
+                        self.centre[0] -= dx * dist_per_pixel
+                        self.centre[1] += dy * dist_per_pixel
 
             self.prog["centre"].value = self.centre
             self.prog["viewport"].value = self.viewport
+            self.prog["parameter"].value = self.parameter
             self.vao.render(moderngl.TRIANGLES, vertices=3)
 
             fps = clock.get_fps()

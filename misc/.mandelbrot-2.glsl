@@ -7,6 +7,7 @@ uniform float viewport;
 uniform vec2  parameter;
 uniform float parameter2;
 uniform vec2  resolution;
+uniform bool  mandelbrot;
 
 const   int   MAX_I     = 300;
 const   float THRESHOLD = 100.0;
@@ -17,8 +18,8 @@ void main() {
   vec2 coord = centre + (p - 0.5 * resolution) / resolution.y * viewport;
 
   int  i = 0;
-  vec2 z = coord;
-  vec2 c = parameter;
+  vec2 z = mandelbrot ? parameter : coord;
+  vec2 c = mandelbrot ? coord : parameter;
 
   while (i < MAX_I && dot(z, z) <= THRESHOLD) {
     float r = length(z);

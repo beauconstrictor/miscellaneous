@@ -14,6 +14,7 @@ class MandelbrotExplorer:
         self.viewport   = VIEWPORT
         self.centre     = [0, 0]
         self.parameter  = [0, 0]
+        self.mandelbrot = True
         self.parameter2 = 2
 
         self.set_up_pygame()
@@ -87,7 +88,6 @@ class MandelbrotExplorer:
                     self.centre[0] += mouse_world_x - new_mouse_world_x
                     self.centre[1] += mouse_world_y - new_mouse_world_y
 
-
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     dragging = True
                 elif event.type == pygame.MOUSEBUTTONUP:
@@ -103,10 +103,20 @@ class MandelbrotExplorer:
                         self.centre[0] -= dx * dist_per_pixel
                         self.centre[1] += dy * dist_per_pixel
 
+                elif event.type == pygame.KEYDOWN:
+                    if event.key != pygame.K_SPACE: continue
+                    self.mandelbrot = not self.mandelbrot
+
+                    self.parameter = [0, 0]
+                    self.parameter2 = 2
+                    self.centre = [0, 0]
+                    self.viewport = 3
+
             self.prog["centre"].value = self.centre
             self.prog["viewport"].value = self.viewport
             self.prog["parameter"].value = self.parameter
             self.prog["parameter2"].value = self.parameter2
+            self.prog["mandelbrot"].value = self.mandelbrot
             self.vao.render(moderngl.TRIANGLES, vertices=3)
 
             fps = clock.get_fps()

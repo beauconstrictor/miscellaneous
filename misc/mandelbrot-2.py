@@ -9,13 +9,15 @@ RESOLUTION    = 1920, 1080
 PARAMETER_2      = 2
 PARAMETER_2_RATE = 0.05
 
+MODES = 4
+
 class MandelbrotExplorer:
     def __init__(self) -> None:
         self.viewport   = VIEWPORT
         self.centre     = [0, 0]
         self.parameter  = [0, 0]
-        self.mandelbrot = True
         self.parameter2 = 2
+        self.mode = 0
 
         self.set_up_pygame()
         self.set_up_gpu()
@@ -103,20 +105,20 @@ class MandelbrotExplorer:
                         self.centre[0] -= dx * dist_per_pixel
                         self.centre[1] += dy * dist_per_pixel
 
-                elif event.type == pygame.KEYDOWN:
-                    if event.key != pygame.K_SPACE: continue
-                    self.mandelbrot = not self.mandelbrot
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                    self.mode += 1
+                    self.mode %= MODES
 
                     self.parameter = [0, 0]
                     self.parameter2 = 2
                     self.centre = [0, 0]
                     self.viewport = 3
 
+            self.prog["mode"].value = self.mode
             self.prog["centre"].value = self.centre
             self.prog["viewport"].value = self.viewport
             self.prog["parameter"].value = self.parameter
             self.prog["parameter2"].value = self.parameter2
-            self.prog["mandelbrot"].value = self.mandelbrot
             self.vao.render(moderngl.TRIANGLES, vertices=3)
 
             fps = clock.get_fps()

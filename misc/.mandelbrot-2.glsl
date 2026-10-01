@@ -7,21 +7,43 @@ uniform float viewport;
 uniform vec2  parameter;
 uniform float parameter2;
 uniform vec2  resolution;
-uniform bool  mandelbrot;
+uniform int   mode;
 
 const   int   MAX_I     = 300;
 const   float THRESHOLD = 100.0;
 const   vec3  TINT = vec3(7, 1, 1);
+
+const   int   MANDELBROT = 0; // iconic
+const   int   JULIA      = 1; // pretty patterns
+const   int   BURNING    = 2; // looks like a ship on fire!
+const   int   SLIME      = 3; // try it with a negative exponent
 
 void main() {
   vec2 p = gl_FragCoord.xy;
   vec2 coord = centre + (p - 0.5 * resolution) / resolution.y * viewport;
 
   int  i = 0;
-  vec2 z = mandelbrot ? parameter : coord;
-  vec2 c = mandelbrot ? coord : parameter;
+ 
+  vec2 z;
+  vec2 c;
+
+  if (mode == MANDELBROT || mode == BURNING) {
+    z = parameter;
+    c = coord;
+  } else if (mode == JULIA || mode == SLIME) {
+    z = coord;
+    c = parameter;
+  }
 
   while (i < MAX_I && dot(z, z) <= THRESHOLD) {
+    if (mode == SLIME) {
+      c.x *= z.x;
+      c.y *= z.y;
+    } else if (mode == BURNING) {
+      z.x = abs(z.x);
+      z.y = -abs(z.y);
+    }
+
     float r = length(z);
     float theta = atan(z.y, z.x);
     z = pow(r, parameter2) * vec2(cos(parameter2 * theta), sin(parameter2  * theta)) + c;

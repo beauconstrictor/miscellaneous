@@ -16,7 +16,7 @@ const   vec3  TINT = vec3(7, 1, 1);
 const   int   MANDELBROT = 0; // iconic
 const   int   JULIA      = 1; // pretty patterns
 const   int   BURNING    = 2; // looks like a ship on fire!
-const   int   SLIME      = 3; // try it with a negative exponent
+const   int   BLACK_HOLE = 3; // self-explanatory really
 
 void main() {
   vec2 p = gl_FragCoord.xy;
@@ -30,13 +30,13 @@ void main() {
   if (mode == MANDELBROT || mode == BURNING) {
     z = parameter;
     c = coord;
-  } else if (mode == JULIA || mode == SLIME) {
+  } else if (mode == JULIA || mode == BLACK_HOLE) {
     z = coord;
     c = parameter;
   }
 
   while (i < MAX_I && dot(z, z) <= THRESHOLD) {
-    if (mode == SLIME) {
+    if (mode == BLACK_HOLE) {
       c.x *= z.x;
       c.y *= z.y;
     } else if (mode == BURNING) {

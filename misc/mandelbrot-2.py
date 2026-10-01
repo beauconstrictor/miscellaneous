@@ -10,6 +10,10 @@ PARAMETER_2      = 2
 PARAMETER_2_RATE = 0.05
 
 MODES = 4
+MANDELBROT = 0
+JULIA      = 1
+BURNING    = 2
+BLACK_HOLE = 3
 
 class MandelbrotExplorer:
     def __init__(self) -> None:
@@ -113,6 +117,9 @@ class MandelbrotExplorer:
                     self.parameter2 = 2
                     self.centre = [0, 0]
                     self.viewport = 3
+                    self.parameter2 = 2
+
+                    if self.mode == BLACK_HOLE: self.parameter2 = -2
 
             self.prog["mode"].value = self.mode
             self.prog["centre"].value = self.centre

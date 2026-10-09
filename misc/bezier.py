@@ -3,7 +3,7 @@ import turtle
 from typing import TypeAlias
 
 GRAB_RADIUS  = 100     # grabbable size of handles
-HANDLE_SIZE  = 10      # visible size of handles
+HANDLE_SIZE  = 15      # visible size of handles
 CURVE_DETAIL = (2, 50) # range allowed
 
 coord: TypeAlias = tuple[float, float]
@@ -32,13 +32,14 @@ class Bezier(turtle.Turtle):
 
     def sample(self, t: float) -> coord:
         a1, a2, b1, b2 = self.a1, self.a2, self.b1, self.b2
-        a = lerp(a1, a2, t)
-        b = lerp(b1, b2, t)
-        c = lerp(a2, b1, t)
-        d = lerp(a, c, t)
-        e = lerp(c, b, t)
-        f = lerp(d, e, t)
-        return f
+        r0 = lerp(a1, a2, t)
+        r1 = lerp(a2, b1, t)
+        r2 = lerp(b1, b2, t)
+
+        p0 = lerp(r0, r1, t)
+        p1 = lerp(r1, r2, t)
+
+        return lerp(p0, p1, t)
     
     def draw(self, n: int) -> None:
         self.penup()
@@ -51,11 +52,15 @@ class Bezier(turtle.Turtle):
         self.pensize(1)
 
         for i in [("a1", "a2"), ("b2", "b1")]:
-
             self.penup()
             self.goto(getattr(self, i[0]))
             self.shape("circle")
             self.stamp()
+            self.shapesize(HANDLE_SIZE/20/1.4)
+            self.color("black")
+            self.stamp()
+            self.shapesize(HANDLE_SIZE/20)
+            self.color("white")
             self.setheading(self.towards(getattr(self, i[1])))
             self.pendown()
             self.goto(getattr(self, i[1]))
@@ -122,9 +127,9 @@ class App:
         print(event.delta)
 
         if event.delta > 0:
-            self.scroll_up()
+            self.scroll_up(event)
         elif event.delta < 0:
-            self.scroll_down()
+            self.scroll_down(event)
 
     def start(self) -> None:
         self.canvas.bind("<MouseWheel>", self.scroll)

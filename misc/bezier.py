@@ -2,8 +2,9 @@ import math
 import turtle
 from typing import TypeAlias
 
-GRAB_RADIUS = 100 # grabbable size of handles
-HANDLE_SIZE = 10  # visible size of handles
+GRAB_RADIUS  = 100     # grabbable size of handles
+HANDLE_SIZE  = 10      # visible size of handles
+CURVE_DETAIL = (2, 50) # range allowed
 
 coord: TypeAlias = tuple[float, float]
 
@@ -69,14 +70,15 @@ class App:
         self.screen = turtle.Screen()
         self.canvas = self.screen.getcanvas()
 
+        self.dragging = None
+        self.detail   = CURVE_DETAIL[1]
+
         self.bezier = Bezier((-200,-100), (-100,100), (100,100), (200,-100))
         self.draw()
 
-        self.dragging = None
-
     def draw(self) -> None:
         self.bezier.clear()
-        self.bezier.draw(GRAB_RADIUS)
+        self.bezier.draw(self.detail)
         self.bezier.draw_handles()
         turtle.update()
 
@@ -105,7 +107,29 @@ class App:
     def end_drag(self, event) -> None:
         self.dragging = None
 
+    
+    def scroll_up(self, event) -> None:
+        self.detail += 1
+        self.detail = min(self.detail, CURVE_DETAIL[1])
+        self.draw()
+
+    def scroll_down(self, event) -> None:
+        self.detail -= 1
+        self.detail = max(self.detail, CURVE_DETAIL[0])
+        self.draw()
+
+    def scroll(self, event) -> None:
+        print(event.delta)
+
+        if event.delta > 0:
+            self.scroll_up()
+        elif event.delta < 0:
+            self.scroll_down()
+
     def start(self) -> None:
+        self.canvas.bind("<MouseWheel>", self.scroll)
+        self.canvas.bind("<Button-4>", self.scroll_up)
+        self.canvas.bind("<Button-5>", self.scroll_down)
         self.canvas.bind("<Button-1>", self.begin_drag)
         self.canvas.bind("<B1-Motion>", self.drag)
         self.canvas.bind("<ButtonRelease-1>", self.end_drag)

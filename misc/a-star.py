@@ -1,7 +1,7 @@
 from pprint import pprint
 from enum import Enum
-
-WIDTH, HEIGHT = 8, 4
+import random
+import turtle
 
 type coord = tuple[int, int]
 
@@ -10,6 +10,16 @@ class Cell(Enum):
     IMPASSABLE = "#"
     START      = "S"
     FINISH     = "F"
+
+CELL_SIZE = 20
+COLOUR_MAP = {
+        Cell.PASSABLE:   (1,   1,  1),
+        Cell.IMPASSABLE: (0.5, 0.5, 0.5),
+        Cell.FINISH:     (1,   0,   0),
+        Cell.START:      (0,   1,   0),
+}
+
+WIDTH, HEIGHT = 20, 15
 
 class EvaluatedCell:
     def __init__(self, c: coord, maze: Maze, parent: coord|None) -> None:
@@ -57,7 +67,7 @@ class Maze:
     def __repr__(self) -> str:
         return self.render(None)
 
-    def a_star(self) -> list[coord]:
+    def a_star(self) -> list[coord]|None:
         open_list   = [EvaluatedCell(self.start, self, None)]
         closed_list = []
 
@@ -85,20 +95,68 @@ class Maze:
                         cell = cell.parent
                         path.append(cell.c)
                     path.pop() # remove start from path
-                    return path
+                    return reversed(path)
                 else:
                     open_list.append(cell)
 
-if __name__ == "__main__":
+        return None
+
+def plot_square(c: coord) -> None:
+    x, y = c
+    turtle.goto(x*CELL_SIZE-WIDTH*CELL_SIZE/2, HEIGHT*CELL_SIZE/2-y*CELL_SIZE)
+    turtle.stamp()
+
+def main() -> None:
     maze = Maze()
-    
+
     maze.set_cell((0, 0), Cell.START)
-    maze.set_cell((7, 3), Cell.FINISH)
-    for i in range(4): maze.set_cell((4+i, 0), Cell.IMPASSABLE)
-    for i in range(3): maze.set_cell((5+i, 1), Cell.IMPASSABLE)
-    for i in range(2): maze.set_cell((0+i, 2), Cell.IMPASSABLE)
-    for i in range(2): maze.set_cell((3+i, 2), Cell.IMPASSABLE)
-    maze.set_cell((0, 3), Cell.IMPASSABLE)
+    maze.set_cell((19, 14), Cell.FINISH)
+
+    for y in range(HEIGHT):
+        for x in range(WIDTH):
+            if (x, y) != maze.start and (x, y) != maze.finish:
+                if random.random() < 0.25:
+                    maze.set_cell((x, y), Cell.IMPASSABLE)
+
+    turtle.color("black")
+    turtle.shape("square")
+    turtle.penup()
+    turtle.shapesize(CELL_SIZE/20)
+    turtle.hideturtle()
+    turtle.tracer(False)
+
+    for x in range(-1, WIDTH+1):
+        plot_square((x, -1))
+        plot_square((x, HEIGHT))
+    for y in range(-1, HEIGHT+1):
+        plot_square((-1, y))
+        plot_square((WIDTH, y))
+
+    for y, row in enumerate(maze.grid):
+        for x, cell in enumerate(row):
+            turtle.color( COLOUR_MAP[cell])
+            plot_square((x, y))
 
     path = maze.a_star()
-    print(maze.render(path))
+    if path is None:
+        turtle.goto(0, 0)
+        turtle.color("red")
+        turtle.write("No path found!", align="center", font=("Arial", 24, "bold"))
+        turtle.Screen().ontimer(main, 3000)
+        return
+
+    turtle.update()
+    turtle.tracer(True)
+
+    turtle.speed(1)
+
+    for c in path:
+        turtle.color((1, 1, 0))
+        plot_square(c)
+        turtle.showturtle()
+
+    turtle.Screen().ontimer(main, 1000)
+
+if __name__ == "__main__":
+    main()
+    turtle.done()

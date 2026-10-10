@@ -32,6 +32,7 @@ class Bezier(turtle.Turtle):
 
     def sample(self, t: float) -> coord:
         a1, a2, b1, b2 = self.a1, self.a2, self.b1, self.b2
+
         r0 = lerp(a1, a2, t)
         r1 = lerp(a2, b1, t)
         r2 = lerp(b1, b2, t)
@@ -124,8 +125,6 @@ class App:
         self.draw()
 
     def scroll(self, event) -> None:
-        print(event.delta)
-
         if event.delta > 0:
             self.scroll_up(event)
         elif event.delta < 0:

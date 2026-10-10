@@ -1,127 +1,104 @@
-from typing import Any
+from pprint import pprint
 from enum import Enum
-import turtle
 
-class CellType(Enum):
-    EMPTY = 0
-    WALL = 1
-    START = 2
-    END = 3
-    SOLUTION = 4
+WIDTH, HEIGHT = 8, 4
 
-colours = {
-    "red": (255, 0, 0),
-    "green": (0, 255, 0),
-    "blue": (0, 0, 255),
-    "white": (255, 255, 255),
-    "black": (0, 0, 0),
-    "solution": (255, 0, 0),
-}
+type coord = tuple[int, int]
 
-class GridDrawer(turtle.Turtle):
-    def __init__(self, grid_cells: int, cell_pixels: int) -> None:
-        super().__init__()
+class Cell(Enum):
+    PASSABLE   = " "
+    IMPASSABLE = "#"
+    START      = "S"
+    FINISH     = "F"
 
-        turtle.tracer(False)
-        turtle.colormode(255)
-        turtle.bgcolor(colours["black"])
+class EvaluatedCell:
+    def __init__(self, c: coord, maze: Maze, parent: coord|None) -> None:
+        self.c = c
+        self.maze = maze
+        self.parent = parent
+    
+    def g(self) -> int:
+        return 0 if self.parent is None else self.parent.g() + 1
 
-        self.shape("square")
-        self.penup()
+    def h(self) -> int:
+        # manhattan distance
+        dx = abs(self.c[0] - self.maze.finish[0])
+        dy = abs(self.c[1] - self.maze.finish[1])
+        return dx + dy
 
-        default_turtle_size = 20
-        stretch_factor = cell_pixels / default_turtle_size
-        self.shapesize(stretch_factor, stretch_factor)
+    def f(self) -> int:
+        return self.h() + self.g()
 
-        self.grid_cells = grid_cells
-        self.cell_pixels = cell_pixels
+class Maze:
+    def __init__(self) -> None:
+        self.grid = [[Cell.PASSABLE for i in range(WIDTH)] for i in range(HEIGHT)]
+        self.alterations = {}
+        self.start = None
+        self.finish = None
 
-        self.total_size = grid_cells * cell_pixels
-        turtle.setup(self.total_size + 40, self.total_size + 40)
-        
-        turtle.title("A* Maze Solver")
-        
-    def get_row_col(self, x: int, y: int) -> tuple[int, int]:
-        total_size = self.total_size
-        cell_pixels = self.cell_pixels
+    def set_cell(self, c: coord, value: Cell) -> None:
+        self.alterations[c] = value
+        self.grid[c[1]][c[0]] = value
+        if value == Cell.START:  self.start  = c
+        if value == Cell.FINISH: self.finish = c
 
-        column = int((x + total_size / 2) // cell_pixels)
-        row = int((total_size / 2 - y) // cell_pixels)
+    def at(self, c: coord) -> Cell:
+        return self.grid[c[1]][c[0]]
 
-        return row, column
+    def render(self, path: list[coord]|None=None) -> str:
+        maze = [[cell.value for cell in row] for row in self.grid]
 
-    def draw_cell(self, row: int, column: int, colour: tuple[int, int, int]) -> None:
-        total_size = self.total_size
+        if path:
+            for cell in path:
+                maze[cell[1]][cell[0]] = "+"
 
-        x = -total_size / 2 + column * self.cell_pixels + self.cell_pixels / 2
-        y = total_size / 2 - row * self.cell_pixels - self.cell_pixels / 2
+        return "\n".join("".join(row) for row in maze)
 
-        self.color(colour)
-        self.goto(x, y)
-        self.stamp()
+    def __repr__(self) -> str:
+        return self.render(None)
 
-    def draw_grid(self, grid: list[list[int]]) -> None:
-        cell_type_colours = {
-            CellType.EMPTY.value: colours["white"],
-            CellType.WALL.value: colours["blue"],
-            CellType.START.value: colours["green"],
-            CellType.END.value: colours["red"],
-            CellType.SOLUTION.value: colours["solution"],
-        }
+    def a_star(self) -> list[coord]:
+        open_list   = [EvaluatedCell(self.start, self, None)]
+        closed_list = []
 
-        for row in range(len(grid)):
-            for col in range(len(grid[row])):
-                cell = grid[row][col]
-                color = cell_type_colours.get(cell, colours["white"])
-                self.draw_cell(row, col, color)
+        while len(open_list) > 0:
+            open_list.sort(key=lambda c: c.f())
 
-maze_layout = [
-    [2, 0, 1, 0, 0, 0, 1, 0, 0, 0],
-    [1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
-    [1, 0, 0, 0, 1, 0, 0, 0, 1, 0],
-    [1, 1, 1, 1, 1, 1, 1, 0, 1, 0],
-    [0, 0, 0, 0, 0, 0, 1, 0, 1, 0],
-    [0, 1, 1, 1, 1, 0, 1, 0, 1, 0],
-    [0, 1, 0, 0, 1, 0, 0, 0, 0, 0],
-    [0, 1, 0, 1, 1, 1, 1, 1, 1, 1],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-]
+            q = open_list.pop(0)
+            closed_list.append(q)
 
-drawer = GridDrawer(10, 40)
+            for d in (1, 0), (0, 1), (-1, 0), (0, -1):
+                c = q.c[0]+d[0], q.c[1]+d[1]
 
-def toggle_cell(x: int, y: int) -> None:
-    row, col = drawer.get_row_col(x, y)
-    cell = maze_layout[row][col]
-    if cell == CellType.WALL.value:
-        maze_layout[row][col] = CellType.EMPTY.value
-    elif cell == CellType.EMPTY.value:
-        maze_layout[row][col] = CellType.WALL.value
-    drawer.draw_grid(maze_layout)
+                if not (0 <= c[0] < WIDTH):       continue
+                if not (0 <= c[1] < HEIGHT):      continue
+                if self.at(c) == Cell.IMPASSABLE: continue
 
-def find_in_maze(maze: list[list[int]], cell_target: int) -> tuple[int, int]:
-    for x, row in enumerate(maze):
-        for y, cell in enumerate(row):
-            if cell == cell_target: return x, y
+                if any(cell.c == c for cell in open_list):   continue
+                if any(cell.c == c for cell in closed_list): continue
 
-def get_smallest_f(m: list[int], nodes: dict[str, Any]): # TODO: this is where i should pick up from!
+                cell = EvaluatedCell(c, self, q)
 
-def solve_maze(maze: list[list[int]]) -> None:
-    start_node = find_in_maze(maze, 2)
-    goal_node = find_in_maze(maze, 3)
+                if cell.c == self.finish:
+                    path = []
+                    while cell.parent is not None:
+                        cell = cell.parent
+                        path.append(cell.c)
+                    path.pop() # remove start from path
+                    return path
+                else:
+                    open_list.append(cell)
 
-    open_set = [start_node]
-    closed_set = set()
+if __name__ == "__main__":
+    maze = Maze()
+    
+    maze.set_cell((0, 0), Cell.START)
+    maze.set_cell((7, 3), Cell.FINISH)
+    for i in range(4): maze.set_cell((4+i, 0), Cell.IMPASSABLE)
+    for i in range(3): maze.set_cell((5+i, 1), Cell.IMPASSABLE)
+    for i in range(2): maze.set_cell((0+i, 2), Cell.IMPASSABLE)
+    for i in range(2): maze.set_cell((3+i, 2), Cell.IMPASSABLE)
+    maze.set_cell((0, 3), Cell.IMPASSABLE)
 
-    nodes = { start_node: { "g": 0, "h": heuristic(start_node, goal_node) }: "parent": None }
-    nodes[start_node]["f"] = nodes[start_node]["g"] + nodes[start_node]["h"]
-
-    current_node = start_node
-
-    while True:
-        pass
-
-drawer.draw_grid(maze_layout)
-
-turtle.onscreenclick(toggle_cell)
-turtle.done()
+    path = maze.a_star()
+    print(maze.render(path))

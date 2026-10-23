@@ -5,10 +5,15 @@ from collections import defaultdict
 
 SUPERSCRIPT = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
 
+# isqrt(1000) is 31, so we don't need to go any higher than that
+# (1000) is the highest number we can get here
 RULES = """
 2.  final digit is 0, 2, 4, 6 or 8
 3.  sum of digits is divisible by 3
 5.  final digit is 0 or 5
+--- for these, the 'rest' is the number without its last digit.
+--- once you have used the rule, you will get a new number. if that
+--- number is divisible by the factor, then so is the original.
 7.  subtract twice the last digit from the rest
 11. subtract the last digit from the rest
 13. subtract 9x the last digit from the rest
@@ -16,6 +21,7 @@ RULES = """
 19. add 2x the last digit to the rest
 23. add 7x the last digit to the rest
 29. add 3x the last digit to the rest
+31. subtract 3x the last digit from the rest
 """.strip()
 
 def yesno(s: str) -> bool:
@@ -63,7 +69,7 @@ def main() -> None:
     n_left = n
 
     if show_rules:
-        print(RULES)
+        print("\n" + RULES)
 
     while n_left > 1:
         if n_left == n:
@@ -74,7 +80,7 @@ def main() -> None:
         print(f"found:", show_prime_factorisation(counts) or "nothing yet")
 
         if show_sqrt:
-            print(f"⌊√{n}⌋ = {isqrt(n)}")
+            print(f"⌊√{n_left}⌋ = {isqrt(n_left)}")
         if show_primes:
             print("useful primes:")
             for p in primes(isqrt(n)):

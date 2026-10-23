@@ -5,6 +5,8 @@ from collections import defaultdict
 
 SUPERSCRIPT = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
 
+MIN, MAX = 10, 1000
+
 # isqrt(1000) is 31, so we don't need to go any higher than that
 # (1000) is the highest number we can get here
 RULES = """
@@ -58,7 +60,7 @@ def show_prime_factorisation(counts: dict[int, int]) -> str:
     return "×".join(f"{f}{superscript(counts[f]) if counts[f] > 1 else ''}" for f in sorted(counts.keys()))
 
 def main() -> None:
-    n = randint(10, 1000)
+    n = randint(MIN, MAX)
 
     print("prime factorisation practice!")
     show_sqrt   = yesno("do you want to see the number's square root?")

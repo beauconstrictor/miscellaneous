@@ -83,7 +83,7 @@ def main() -> None:
             print(f"⌊√{n_left}⌋ = {isqrt(n_left)}")
         if show_primes:
             print("useful primes:")
-            for p in primes(isqrt(n)):
+            for p in primes(isqrt(n_left if show_sqrt else n)):
                 print(p)
 
         try:
